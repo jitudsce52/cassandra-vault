@@ -1,0 +1,21 @@
+{{- if .Values.pdb.create }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "cassandra.names.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cassandra.labels" . | nindent 4 }}
+  {{- with .Values.pdb.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.pdb.minAvailable }}
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels: {{ include "cassandra.matchLabels" . | nindent 6 }}
+{{- end }}
