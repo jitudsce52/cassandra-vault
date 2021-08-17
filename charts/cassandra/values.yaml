@@ -1,0 +1,283 @@
+# Default values for cassandra.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+## Parameter updateStrategy updateStrategy for Cassandra statefulset
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+##
+updateStrategy: RollingUpdate
+## Parameter hostAliases Add deployment host aliases
+## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+
+podManagementPolicy: OrderedReady
+## Parameter priorityClassName Cassandra pods' priority.
+## ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+##
+priorityClassName: ""
+## Parameter podAnnotations Additional pod annotations
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+
+## Parameter clusterDomain Kubernetes cluster domain name
+##
+clusterDomain: cluster.local
+image:
+  repository: cassandra
+    ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+dbUser:
+  user: cassandra
+  forcePassword: false
+  password: ""
+  ## Use an existing secrets which already stores your password data.
+  ## for backwards compatibility, existingSecret can be a simple string,
+  ## referencing the secret by name.
+  ## existingSecret:
+  ##   ## Name of the existing secret
+  ##   ##
+  ##   name: mySecret
+  ##   ## Key mapping where <key> is the value which the deployment is expecting and
+  ##   ## <value> is the name of the key in the existing secret.
+  ##   ##
+  ##   keyMapping:
+  ##     cassandra-password: cassandraKey
+  existingSecret: ""
+
+cluster:
+  name: cassandra
+  seedCount: 1
+  numTokens: 256
+  datacenter: D1
+  rack: Rack1
+  endpointSnitch: GossipingPropertyFileSnitch
+  ## NOTE: internodeEncryption requires tlsEncryptionSecretName
+  ##
+  internodeEncryption: none
+  clientEncryption: false
+
+jvm:
+  extraOpts: ""
+  ## Memory settings: These are calculated automatically unless specified otherwise
+  ## - pick the max
+  maxHeapSize: ""
+  ## newHeapSize:
+  ## ref: https://docs.datastax.com/en/archived/cassandra/2.0/cassandra/operations/ops_tune_jvm_c.html
+  ##
+  newHeapSize: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+
+## Cassandra service parameters
+##
+service:
+  ## Parameter service.type Cassandra service type
+  ##
+  type: ClusterIP
+  ## Parameter service.port Cassandra service CQL Port
+  ##
+  port: 9042
+  ## Parameter service.metricsPort Cassandra service metrics port
+  ##
+  metricsPort: 8080
+  ## Node ports to expose
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+  ## Parameter service.nodePorts.cql Node port for CQL
+  ## Parameter service.nodePorts.metrics Node port for metrics
+  ##
+  nodePorts:
+    cql: ""
+    metrics: ""
+  ## Parameter service.loadBalancerIP LoadBalancerIP if service type is `LoadBalancer`
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+  ##
+  loadBalancerIP: ""
+  ## Parameter service.annotations Provide any additional annotations which may be required.
+  ## This can be used to set the LoadBalancer service type to internal only.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+  ##
+  annotations: {}
+## Network policies
+## Ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+##
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+
+## Parameter podLabels Additional pod labels
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+##
+podLabels: {}
+## Parameter podAffinityPreset Pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+##
+podAffinityPreset: ""
+## Parameter podAntiAffinityPreset Pod anti-affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
+## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+##
+podAntiAffinityPreset: soft
+## Node affinity preset
+## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+##
+nodeAffinityPreset:
+  ## Parameter nodeAffinityPreset.type Node affinity preset type. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
+  ##
+  type: ""
+  ## Parameter nodeAffinityPreset.key Node label key to match. Ignored if `affinity` is set
+  ##
+  key: ""
+  ## Parameter nodeAffinityPreset.values Node label values to match. Ignored if `affinity` is set
+  ## E.g.
+  ## values:
+  ##   - e2e-az1
+  ##   - e2e-az2
+  ##
+  values: []
+## Parameter affinity Affinity for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## NOTE: podAffinityPreset, podAntiAffinityPreset, and nodeAffinityPreset will be ignored when it's set
+##
+affinity: {}
+## Parameter nodeSelector Node labels for pod assignment
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+## Parameter readinessProbe.enabled Enable readinessProbe
+## Parameter readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+## Parameter readinessProbe.periodSeconds Period seconds for readinessProbe
+## Parameter readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+## Parameter readinessProbe.failureThreshold Failure threshold for readinessProbe
+## Parameter readinessProbe.successThreshold Success threshold for readinessProbe
+##
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+pdb:
+  ## Parameter pdb.create Enable/disable a Pod Disruption Budget creation
+  ##
+  create: false
+  ## Parameter pdb.minAvailable Mininimum number of pods that must still be available after the eviction
+  ##
+  minAvailable: 1
+  ## Parameter pdb.maxUnavailable Max number of pods that can be unavailable after the eviction
+  ##
+  maxUnavailable: ""
+
+containerPorts:
+  intra: 7000
+  tls: 7001
+  jmx: 7199
+  cql: 9042
+
+persistence:
+  ## Parameter persistence.enabled Enable Cassandra data persistence using PVC, use a Persistent Volume Claim, If false, use emptyDir
+  ##
+  enabled: true
+  ## Parameter persistence.storageClass PVC Storage Class for Cassandra data volume
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: ""
+  ## Parameter persistence.commitStorageClass PVC Storage Class for Cassandra Commit Log volume
+  ## Storage class to use with CASSANDRA_COMMITLOG_DIR to reduce the concurrence for writing data and commit logs
+  ## ref: https://github.com/bitnami/bitnami-docker-cassandra
+  ## If set to "-", commitStorageClass: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  annotations: {}
+  ## Parameter persistence.accessModes Persistent Volume Access Mode
+  ##
+  accessModes:
+    - ReadWriteOnce
+  ## Parameter persistence.size PVC Storage Request for Cassandra data volume
+  ##
+  size: 8Gi
+  ## Parameter persistence.mountPath The path the data volume will be mounted at
+  ##
+  mountPath: /var/lib/cassandra/data
