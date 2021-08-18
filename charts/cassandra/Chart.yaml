@@ -6,7 +6,7 @@ appVersion: 4.0.0
 annotations:
   category: Database
 
-home:　https://github.com/jitudsce52/cassandra-vault.git
+home: https://github.com/jitudsce52/cassandra-vault.git
 icon: https://lh3.googleusercontent.com/9IrOuiEylHX3paGB53BufPFgK5KlIGwUnzqUikJTEX1kEoUEX6JLlJRcWHtcWP9eOBWg=s158
 
 # A chart can be either an 'application' or a 'library' chart.
