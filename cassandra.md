@@ -1,13 +1,26 @@
+### Git clone
+```
+INSM0007: git clone https://github.com/jitudsce52/cassandra-vault.git
 INSM0007:cassandra-vault jitendra_kumar$ git pull
 Already up to date.
+```
+
+### Kubernetes namespace creation
+```
+INSM0007:cassandra-vault jitendra_kumar$ export KUBECONFIG=~/.kube/config-infra-eks
+
 INSM0007:cassandra-vault jitendra_kumar$ kubectl create ns vault
 namespace/vault created
 apiVersion: v2
+
 INSM0007:cassandra-vault jitendra_kumar$ kubectl create ns cassandra
 namespace/cassandra created
+```
 
+### install cassandra helm chart
 
-INSM0007:cassandra-vault jitendra_kumar$ helm3 install cassandra --namespace=cassandra charts/cassandra/ -f override-config/cassadra-override.yaml
+```
+INSM0007:cassandra-vault jitendra_kumar$ helm install cassandra --namespace=cassandra charts/cassandra/ -f override-config/cassadra-override.yaml
 NAME: cassandra
 LAST DEPLOYED: Wed Aug 18 19:05:08 2021
 NAMESPACE: cassandra
@@ -20,7 +33,10 @@ NOTES:
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl --namespace cassandra port-forward $POD_NAME 8080:$CONTAINER_PORT
 
+```
 
+### cassandra pod status
+```
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n cassandra get pods
 NAME          READY   STATUS    RESTARTS   AGE
 cassandra-0   0/1     Running   0          33s
@@ -36,12 +52,19 @@ cassandra-0   1/1     Running   1          9m55s
 cassandra-1   1/1     Running   0          4m45s
 cassandra-2   1/1     Running   0          3m14s
 
+```
 
+### Retrieve cassandra superuser's password
+
+```
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n cassandra get secrets cassandra -o go-template='{{range $k,$v := .data}}{{"### "}}{{$k}}{{"\n"}}{{$v|base64decode}}{{"\n\n"}}{{end}}'
 ### cassandra-password
 spXx0oifp3
+```
 
 
+### Confirm cassandra root credential
+```
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n cassandra exec -it cassandra-0 -- bash
 I have no name!@cassandra-0:/$
 I have no name!@cassandra-0:/$ cqlsh -u cassandra -p spXx0oifp3
@@ -55,8 +78,12 @@ cassandra@cqlsh> list users;
  name      | super | datacenters
 -----------+-------+-------------
  cassandra |  True |         ALL
-
 (1 rows)
+```
+
+### Create user for `vault` and grant permisssion
+
+```
 cassandra@cqlsh> CREATE USER vaultuser WITH PASSWORD 'vaultpass';
 cassandra@cqlsh> list users;
 
@@ -72,9 +99,11 @@ cassandra@cqlsh> GRANT DROP ON ALL ROLES to 'vaultuser';
 cassandra@cqlsh> GRANT AUTHORIZE ON ALL ROLES to 'vaultuser';
 cassandra@cqlsh> GRANT all PERMISSIONS ON all KEYSPACES TO 'vaultuser';
 cassandra@cqlsh>
+```
 
+### create keyspaces and table
 
-
+```
 cassandra@cqlsh> describe keyspaces;
 
 system       system_distributed  system_traces  system_virtual_schema
@@ -127,3 +156,5 @@ cassandra@cqlsh:enployee_keyspace> list users;
  vaultuser | False |         ALL
 
 (2 rows)
+
+```

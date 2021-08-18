@@ -1,14 +1,14 @@
-INSM0007:cassandra-vault jitendra_kumar$ helm3 install vault --namespace=vault charts/ -f override-config/va^C
-INSM0007:cassandra-vault jitendra_kumar$ helm3 repo add hashicorp https://helm.releases.hashicorp.com
+### Vault helm chart installation
+
+```
+INSM0007:cassandra-vault jitendra_kumar$ helm repo add hashicorp https://helm.releases.hashicorp.com
 "hashicorp" already exists with the same configuration, skipping
+
 INSM0007:cassandra-vault jitendra_kumar$ helm search repo hashicorp/vault
-No results found
-INSM0007:cassandra-vault jitendra_kumar$ helm3 search repo hashicorp/vault
 NAME           	CHART VERSION	APP VERSION	DESCRIPTION
 hashicorp/vault	0.14.0       	1.8.0      	Official HashiCorp Vault Chart
+
 INSM0007:cassandra-vault jitendra_kumar$ helm install vault hashicorp/vault --version=0.14.0 --namespace=vault -f override-config/vault-override.yaml
-Error: could not find tiller
-INSM0007:cassandra-vault jitendra_kumar$ helm3 install vault hashicorp/vault --version=0.14.0 --namespace=vault -f override-config/vault-override.yaml
 NAME: vault
 LAST DEPLOYED: Wed Aug 18 19:53:57 2021
 NAMESPACE: vault
@@ -27,6 +27,11 @@ Your release is named vault. To learn more about the release, try:
 
   $ helm status vault
   $ helm get manifest vault
+```
+
+### Vault pods status
+
+```
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n vault get pods
 NAME                                    READY   STATUS              RESTARTS   AGE
 vault-0                                 0/1     ContainerCreating   0          19s
@@ -43,8 +48,10 @@ vault-0                                 0/1     Running   0          68s
 vault-agent-injector-6f886c6c6c-c62vt   1/1     Running   0          68s
 INSM0007:cassandra-vault jitendra_kumar$
 
+```
 
-
+### Vault init
+```
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n vault exec $(kubectl -n vault get pods -l app.kubernetes.io/name=vault -o=jsonpath="{.items[0].metadata.name}") -- vault operator init
 Unseal Key 1: DbPQRT4+3na9t7h6thAWwr1VvUh8arLdDZG/4R0tLPZ9
 Unseal Key 2: AbopURPs4TqAPxNAypdCbU7bL2JWFXud8tH8cqpa28VQ
@@ -66,8 +73,9 @@ It is possible to generate new unseal keys, provided you have a quorum of
 existing unseal keys shares. See "vault operator rekey" for more information.
 INSM0007:cassandra-vault jitendra_kumar$
 
-
-
+```
+### Vault unseal
+```
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n vault exec -it $(kubectl -n vault get pods -l app.kubernetes.io/name=vault -o=jsonpath="{.items[0].metadata.name}") -- sh
 / $ vault operator unseal DbPQRT4+3na9t7h6thAWwr1VvUh8arLdDZG/4R0tLPZ9
 Key                Value
@@ -139,8 +147,11 @@ Cluster Name    vault-cluster-6d557575
 Cluster ID      4543467e-1c66-498a-1303-d197ddef420e
 HA Enabled      false
 / $
+```
 
+### Vault Login
 
+```
 / $ vault login
 Token (will be hidden):
 Success! You are now authenticated. The token information displayed below
@@ -156,7 +167,11 @@ token_renewable      false
 token_policies       ["root"]
 identity_policies    []
 policies             ["root"]
+```
 
+### Enable kubernetes auth for vault and basic kubernetes configuration
+
+```
 / $ vault auth enable kubernetes
 Success! Enabled kubernetes auth method at: kubernetes/
 / $
@@ -166,14 +181,19 @@ Success! Enabled kubernetes auth method at: kubernetes/
 >     kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
 >     kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 Success! Data written to: auth/kubernetes/config
+```
 
+### Enable database secrets plugin
+```
 / $ vault secrets enable database
 Success! Enabled the database secrets engine at: database/
 
-
+```
+### configure cassandra plugin
+```
 / $ vault write database/config/my-cassandra-database \
 >     plugin_name="cassandra-database-plugin" \
->     hosts=cassandra-headless.cassandra \
+>     hosts=cassandra-headless.cassandra.srv.cluster.local. \
 >     protocol_version=4 \
 >     username=vaultuser \
 >     password=vaultpass \
@@ -185,12 +205,16 @@ Success! Enabled the database secrets engine at: database/
 Key                                   Value
 ---                                   -----
 allowed_roles                         [*]
-connection_details                    map[hosts:cassandra-headless.cassandra protocol_version:4 username:vaultuser]
+connection_details                    map[hosts:cassandra-headless.cassandra.srv.cluster.local. protocol_version:4 username:vaultuser]
 password_policy                       n/a
 plugin_name                           cassandra-database-plugin
 root_credentials_rotate_statements    []
 
+```
 
+### Create vault database role
+
+```
 / $ vault write database/roles/my-role \
 >    db_name=my-cassandra-database \
 >    creation_statements="CREATE USER '{{username}}' WITH PASSWORD '{{password}}' NOSUPERUSER; \
@@ -212,7 +236,11 @@ renew_statements         []
 revocation_statements    []
 rollback_statements      []
 
+```
 
+### Datable credential creation with vault
+
+```
 / $ vault read database/creds/my-role
 Key                Value
 ---                -----
@@ -220,8 +248,11 @@ lease_id           database/creds/my-role/QH6J2BNLxHSGQwgHajhxcECv
 lease_duration     1h
 lease_renewable    true
 password           APDHZAy1AEI-MRdRaOU5
-username           v_root_my_role_vmazlep3y9talbni069y_1629289526
+username           v_kubernetes_web__my_role_orlr0rdm7sjxextyobbl_1629311317
+```
 
+### Create readOnly policy for web application with valut annotations
+```
 / $ cat /tmp/web-dynamic.hcl
 path "database/creds/my-role" {
   capabilities = ["read"]
@@ -230,13 +261,21 @@ path "database/creds/my-role" {
 / $ vault policy write web-dynamic /tmp/web-dynamic.hcl
 Success! Uploaded policy: web-dynamic
 
+```
+### Vault kubernete auth role for web application in namespace `web-service`
+
+```
 vault write auth/kubernetes/role/web \
   bound_service_account_names=web \
   bound_service_account_namespaces=web-service \
   policies=web-dynamic \
   ttl=1h
+```
 
-INSM0007:~ jitendkubectl -n cassandra exec -it cassandra-2 -- bash
+### login to cassandra and test the role/user created.
+
+```
+INSM0007:~ jitendra kubectl -n cassandra exec -it cassandra-2 -- bash
 I have no name!@cassandra-2:/$ cqlsh -u cassandra -p spXx0oifp3
 Python 2.7 support is deprecated. Install Python 3.6+ or set CQLSH_NO_WARN_PY2 to suppress this message.
 
@@ -248,10 +287,8 @@ cassandra@cqlsh> list users;
  name                                           | super | datacenters
 ------------------------------------------------+-------+-------------
                                       cassandra |  True |         ALL
- v_root_my_role_4el3ljoxm79pugsbaglh_1629287650 | False |         ALL
- v_root_my_role_qghu9ewmqcnjuvum0jch_1629286516 | False |         ALL
- v_root_my_role_qiytefczfwjsic9qghiw_1629287250 | False |         ALL
- v_root_my_role_vmazlep3y9talbni069y_1629289526 | False |         ALL
+ v_kubernetes_web__my_role_orlr0rdm7sjxextyobbl_1629311317 | False |         ALL
                                       vaultuser | False |         ALL
 
 (6 rows)
+```

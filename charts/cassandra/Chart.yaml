@@ -6,7 +6,6 @@ appVersion: 4.0.0
 annotations:
   category: Database
 
-home: https://github.com/jitudsce52/cassandra-vault.git
 icon: https://lh3.googleusercontent.com/9IrOuiEylHX3paGB53BufPFgK5KlIGwUnzqUikJTEX1kEoUEX6JLlJRcWHtcWP9eOBWg=s158
 
 # A chart can be either an 'application' or a 'library' chart.
@@ -29,3 +28,6 @@ version: 4.0.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "1.16.0"
+
+sources:
+  - home: https://github.com/jitudsce52/cassandra-vault.git
