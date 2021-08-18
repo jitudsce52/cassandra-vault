@@ -88,6 +88,68 @@ spec:
             - name: JVM_EXTRA_OPTS
               value: {{ .Values.jvm.extraOpts | quote }}
             {{- end }}
+
+
+            - name: BITNAMI_DEBUG
+              value: {{ ternary "true" "false" (or .Values.image.debug .Values.diagnosticMode.enabled) | quote }}
+            - name: CASSANDRA_CLUSTER_NAME
+              value: {{ .Values.cluster.name }}
+            - name: CASSANDRA_SEEDS
+              value: {{ (include "cassandra.seeds" .) | quote }}
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cassandra.fullname" . }}
+                  key: "cassandra-password"
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: CASSANDRA_USER
+              value: {{ .Values.dbUser.user | quote }}
+            - name: CASSANDRA_NUM_TOKENS
+              value: {{ .Values.cluster.numTokens | quote }}
+            - name: CASSANDRA_DATACENTER
+              value: {{ .Values.cluster.datacenter }}
+            - name: CASSANDRA_ENDPOINT_SNITCH
+              value: {{ .Values.cluster.endpointSnitch }}
+            - name: CASSANDRA_RACK
+              value: {{ .Values.cluster.rack }}
+            {{- if .Values.jvm.maxHeapSize }}
+            - name: MAX_HEAP_SIZE
+              value: {{ .Values.jvm.maxHeapSize | quote }}
+            {{- end }}
+            {{- if .Values.jvm.newHeapSize }}
+            - name: HEAP_NEWSIZE
+              value: {{ .Values.jvm.newHeapSize | quote }}
+            {{- end }}
+            {{- if .Values.jvm.extraOpts }}
+            - name: JVM_EXTRA_OPTS
+              value: {{ .Values.jvm.extraOpts | quote }}
+            {{- end }}
+            {{- if .Values.cluster.enableUDF }}
+            - name: CASSANDRA_ENABLE_USER_DEFINED_FUNCTIONS
+              value: {{ .Values.cluster.enableUDF | quote }}
+            {{- end }}
+            {{- if .Values.containerPorts.intra  }}
+            - name: CASSANDRA_TRANSPORT_PORT_NUMBER
+              value: {{ .Values.containerPorts.intra | quote }}
+            {{- end }}
+            {{- if .Values.containerPorts.jmx }}
+            - name: CASSANDRA_JMX_PORT_NUMBER
+              value: {{ .Values.containerPorts.jmx | quote }}
+            {{- end }}
+            {{- if .Values.containerPorts.cql }}
+            - name: CASSANDRA_CQL_PORT_NUMBER
+              value: {{ .Values.containerPorts.cql | quote }}
+            {{- end }}
+            {{- with .Values.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             exec:

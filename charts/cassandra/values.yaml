@@ -61,7 +61,7 @@ cluster:
   numTokens: 256
   datacenter: D1
   rack: Rack1
-  endpointSnitch: GossipingPropertyFileSnitch
+  endpointSnitch: SimpleSnitch # GossipingPropertyFileSnitch
   ## NOTE: internodeEncryption requires tlsEncryptionSecretName
   ##
   internodeEncryption: none
@@ -131,6 +131,9 @@ service:
 ## Network policies
 ## Ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 ##
+
+## Extra environment variable
+extraEnvVars: []
 
 ingress:
   enabled: false
