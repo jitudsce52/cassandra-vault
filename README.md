@@ -20,6 +20,29 @@ helm template chart/cassandra
 
 ### Please find cassandra chart README.MD file at chart/cassandra/
 
+# pods stastus Cassandra(HA)
+```
+
+INSM0007:~ jitendra_kumar$ kubectl get nodes
+NAME                                                STATUS   ROLES    AGE     VERSION
+ip-172-30-161-152.ap-northeast-1.compute.internal   Ready    <none>   7d22h   v1.19.6-eks-49a6c0
+ip-172-30-168-55.ap-northeast-1.compute.internal    Ready    <none>   7d22h   v1.19.6-eks-49a6c0
+ip-172-30-169-3.ap-northeast-1.compute.internal     Ready    <none>   7d22h   v1.19.6-eks-49a6c0
+INSM0007:~ jitendra_kumar$ kubectl -n cassandra get pods -o wide
+NAME          READY   STATUS    RESTARTS   AGE   IP               NODE                                                NOMINATED NODE   READINESS GATES
+cassandra-0   1/1     Running   0          14h   172.30.168.26    ip-172-30-169-3.ap-northeast-1.compute.internal     <none>           <none>
+cassandra-1   1/1     Running   0          14h   172.30.161.209   ip-172-30-161-152.ap-northeast-1.compute.internal   <none>           <none>
+cassandra-2   1/1     Running   0          14h   172.30.168.131   ip-172-30-168-55.ap-northeast-1.compute.internal    <none>           <none>
+```
+
+# Pod status vault
+```
+INSM0007:~ jitendra_kumar$ kubectl -n vault get pods -o wide
+NAME                                    READY   STATUS    RESTARTS   AGE   IP               NODE                                                NOMINATED NODE   READINESS GATES
+vault-0                                 1/1     Running   0          9h    172.30.161.116   ip-172-30-161-152.ap-northeast-1.compute.internal   <none>           <none>
+vault-agent-injector-6f886c6c6c-c62vt   1/1     Running   0          13h   172.30.168.48    ip-172-30-169-3.ap-northeast-1.compute.internal     <none>           <none>
+```
+
 ### Web application status and db credential mount 
 ```
 INSM0007:DevOps jitendra_kumar$ kubectl -n web-service get pods
