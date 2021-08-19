@@ -48,7 +48,7 @@ statefulset rolling update complete 3 pods at revision cassandra-6ccd48494d...
 
 INSM0007:cassandra-vault jitendra_kumar$ kubectl -n cassandra get pods
 NAME          READY   STATUS    RESTARTS   AGE
-cassandra-0   1/1     Running   1          9m55s
+cassandra-0   1/1     Running   0          9m55s
 cassandra-1   1/1     Running   0          4m45s
 cassandra-2   1/1     Running   0          3m14s
 
