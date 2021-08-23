@@ -2,12 +2,6 @@
 
 [Apache Cassandra](https://cassandra.apache.org) is a free and open-source distributed database management system designed to handle large amounts of data across many commodity servers or datacenters.
 
-## TL;DR
-
-```console
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install my-release bitnami/cassandra
-```
 
 ## Introduction
 
